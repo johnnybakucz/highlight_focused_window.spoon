@@ -4,6 +4,7 @@ local obj = {}
 obj.name = "HighlightFocusedWindow"
 obj.version = "1.0"
 obj.author = "Jonatan Bakucz"
+obj.homepage = "https://github.com/johnnybakucz/highlight_focused_window.spoon"
 
 -- Configuration
 local borderColor = {red=1, green=0, blue=0, alpha=0.8}
