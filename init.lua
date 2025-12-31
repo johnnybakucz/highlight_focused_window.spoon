@@ -7,8 +7,10 @@ obj.author = "Jonatan Bakucz"
 obj.homepage = "https://github.com/johnnybakucz/highlight_focused_window.spoon"
 
 -- Configuration
-local borderColor = {red=1, green=0, blue=0, alpha=0.8}
+local borderColor = { red = 1, green = 0, blue = 0, alpha = 0.8 }
 local borderWidth = 10
+local borderPadding = 0
+local borderRadius = 8
 
 -- Global variable to store the border
 local focusBorder = nil
@@ -16,7 +18,7 @@ local focusBorder = nil
 -- Function to delete the border
 local function deleteBorder()
     if focusBorder then
-        focusBorder:delete()
+        focusBorder:hide()
         focusBorder = nil
     end
 end
@@ -36,9 +38,9 @@ local function drawBorder()
     -- Adjust frame for border width and padding
     local adjustedFrame = {
         x = frame.x,
-        y = frame.y,
+        y = frame.y - borderPadding,
         w = frame.w,
-        h = frame.h
+        h = frame.h + borderPadding
     }
 
     if focusBorder then
@@ -46,6 +48,7 @@ local function drawBorder()
     else
         focusBorder = hs.drawing.rectangle(adjustedFrame)
         focusBorder:setStrokeColor(borderColor)
+        focusBorder:setRoundedRectRadii(borderRadius, borderRadius)
         focusBorder:setFill(false)
         focusBorder:setStrokeWidth(borderWidth)
         focusBorder:show()
@@ -54,13 +57,38 @@ end
 
 -- Event listener for window focus changes
 local windowFilter = hs.window.filter.new()
-windowFilter:subscribe(hs.window.filter.windowFocused, drawBorder)
-windowFilter:subscribe(hs.window.filter.windowUnfocused, deleteBorder)
-windowFilter:subscribe(hs.window.filter.windowDestroyed, deleteBorder)
-windowFilter:subscribe(hs.window.filter.windowMoved, drawBorder)
-windowFilter:subscribe(hs.window.filter.windowMinimized, deleteBorder)
-windowFilter:subscribe(hs.window.filter.windowHidden, deleteBorder)
-windowFilter:subscribe(hs.window.filter.windowUnminimized, drawBorder)
-windowFilter:subscribe(hs.window.filter.windowUnhidden, drawBorder)
+
+function obj:enable()
+    local borderEvents = {
+        {event = hs.window.filter.windowAllowed,        handler = deleteBorder},
+        {event = hs.window.filter.windowCreated,        handler = deleteBorder},
+        {event = hs.window.filter.windowDestroyed,      handler = deleteBorder},
+        {event = hs.window.filter.windowFocused,        handler = drawBorder},
+        {event = hs.window.filter.windowFullscreened,   handler = drawBorder},
+        {event = hs.window.filter.windowHidden,         handler = deleteBorder},
+        {event = hs.window.filter.windowMinimized,      handler = deleteBorder},
+        {event = hs.window.filter.windowMoved,          handler = drawBorder},
+        {event = hs.window.filter.windowOnScreen,       handler = drawBorder},
+        {event = hs.window.filter.windowTitleChanged,   handler = drawBorder},
+        {event = hs.window.filter.windowUnfocused,      handler = deleteBorder},
+        {event = hs.window.filter.windowUnhidden,       handler = drawBorder},
+        {event = hs.window.filter.windowUnminimized,    handler = drawBorder},
+        {event = hs.window.filter.windowUnfullscreened, handler = drawBorder},
+        {event = hs.window.filter.windowsChanged,       handler = drawBorder},
+    }
+
+    for _, v in ipairs(borderEvents) do
+        windowFilter:subscribe(v.event, v.handler)
+    end
+    hs.alert("Border Highlight Enabled")
+end
+
+function obj:disable()
+    windowFilter:unsubscribeAll()
+    deleteBorder()
+    hs.alert("Border Highlight Disabled")
+end
+
+obj:enable()
 
 return obj
